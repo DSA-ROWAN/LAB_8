@@ -3,18 +3,21 @@ import java.util.LinkedList;
 
 //THIS DOES NOT NEED TO BE BALANCED!!! (AVL)
 
+
+
 public class RedBlackTree<T extends Comparable<T>> 
 {
-	private RBNode<T> root = null;
+	private RBNode<T> dummyRoot = new RBNode<T>(null);
+	private RBNode<T> root = new RBNode<T>(null);
 	public int size = 0;
 	
 	public RedBlackTree(){
-		
+		dummyRoot.setRight(root);
 	}
 	
 	protected RBNode<T> root(T val){
-		if(root == null){
-			root = new RBNode<T>(val);
+		if(root.getValue() == null){
+			root.setValue(val);
 		}
 		return root;
 	}
@@ -24,7 +27,7 @@ public class RedBlackTree<T extends Comparable<T>>
 	}
 	
 	public boolean isEmpty(){
-		if(root == null) return true;
+		if(root.getValue() == null) return true;
 		return false;
 	}
 	
@@ -52,7 +55,7 @@ public class RedBlackTree<T extends Comparable<T>>
 	
 	public void insert(T item) throws Exception{
 		if(this.isEmpty()){
-			this.root = new RBNode<T>(item);
+			this.root.setValue(item);
 			size++;
 			return;
 		}else{
@@ -96,10 +99,8 @@ public class RedBlackTree<T extends Comparable<T>>
 						curr.getRight().red = 0;
 					}else{
 						if(isRed(curr.getLeft().getLeft())){
-							System.out.println("Single");
 							curr = rotateSingle(curr);
 						}else if(isRed(curr.getLeft().getRight())){
-							System.out.println("Double");
 							curr = rotateSingle(curr.getLeft());
 							curr = rotateSingle(curr);
 						}					
@@ -111,10 +112,8 @@ public class RedBlackTree<T extends Comparable<T>>
 						curr.getRight().red = 0;
 					}else{
 						if(isRed(curr.getRight().getRight())){
-							System.out.println("Single");
 							curr = rotateSingle(curr);
 						}else if(isRed(curr.getRight().getLeft())){
-							System.out.println("Double");
 							curr = rotateSingle(curr.getRight());
 							curr = rotateSingle(curr);
 						}					
@@ -142,6 +141,7 @@ public class RedBlackTree<T extends Comparable<T>>
 				nd.setLeft(svNd.getRight());
 				svNd.setRight(nd);
 				svNd.red = 0;
+				return svNd;
 			}
 
 			nd.red = 1;
@@ -153,92 +153,106 @@ public class RedBlackTree<T extends Comparable<T>>
 				nd.setRight(svNd.getLeft());
 				svNd.setLeft(nd);
 				svNd.red = 0;
+				return svNd;
 			}
 			nd.red = 1;
 			return nd;
 		}
 	}
 	
+	private RBNode<T> rotateDouble(RBNode<T> nd, int direction){
+		return rotateSingle(rotateSingle(nd.go(direction)));
+	}
+	
 	public T delete(T object){
-		if(this.isEmpty()){
-			throw new NoSuchElementException();
+		
+		if(!this.isEmpty()){
+			
+			RBNode<T> dummyTmp = this.dummyRoot;
+			RBNode<T> tmpNd1 = new RBNode<T>(null);
+			RBNode<T> tmpNd2 = new RBNode<T>(null);
+			RBNode<T> tmpNd3 = null;
+			int direction = 1;
+			int otherDirection = -1;
+			
+			while(dummyTmp.go(direction) != null){
+				
+				int last = direction;
+				int otherLast = otherDirection;
+				tmpNd2 = tmpNd1; 
+				tmpNd1 = dummyTmp;
+				
+				dummyTmp = dummyTmp.go(direction);
+				
+				direction = dummyTmp.getValue().compareTo(object);
+				otherDirection = direction > 0 ? -1 : 1;
+				
+				if (dummyTmp.getValue().compareTo(object) == 0){
+	                tmpNd3 = dummyTmp;
+	            }
+				
+				if(this.isRed(dummyTmp) && !this.isRed(dummyTmp.go(direction))){
+					if(this.isRed(dummyTmp.go(direction))){
+						tmpNd1.put(last, this.rotateSingle(dummyTmp));
+					}else if(!this.isRed(dummyTmp.go(otherDirection))){
+						RBNode<T> svNd = tmpNd1.go(otherLast);
+						if(svNd != null){
+							if(!this.isRed(svNd.go(otherLast)) && !this.isRed(svNd.go(last))){
+								tmpNd1.red = 0;
+	                            svNd.red = 1;
+	                            dummyTmp.red = 1;
+							}else{
+								int direction2 = tmpNd2.go(1) == tmpNd1 ? -1 : 1;
+								
+								if(this.isRed(svNd.go(last))){
+									
+									if(last > 0){
+										tmpNd1 = rotateSingle(tmpNd1.getRight());
+										tmpNd1 = rotateSingle(tmpNd1);
+									}else{
+										tmpNd1 = rotateSingle(tmpNd1.getLeft());
+										tmpNd1 = rotateSingle(tmpNd1);
+									}
+									tmpNd2.put(direction2, tmpNd1);
+								}else if(this.isRed(svNd.go(otherLast))){
+									tmpNd2.put(direction2, rotateSingle(tmpNd1));
+								}
+								
+								dummyTmp.red = tmpNd2.go(direction2).red = 1;
+								
+								if(tmpNd2.go(direction2).go(-1) != null){
+									tmpNd2.go(direction2).go(-1).red = 0;
+								}
+								
+								if(tmpNd2.go(direction2).go(1) != null){
+									tmpNd2.go(direction2).go(1).red = 0;
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			if(tmpNd3 != null){
+				tmpNd3.setValue(dummyTmp.getValue());			
+				int sd1 = tmpNd1.go(1) == dummyTmp ? -1 : 1;
+				int sd2 = dummyTmp.go(0) == null ? -1 : 1;
+				tmpNd1.put(sd1, dummyTmp.go(sd2));
+				dummyTmp = null;
+				size--;
+			}
+			
+			this.root = this.dummyRoot.getRight();
+			
+			if(this.root != null){
+				this.root.red = 0;
+			}
+			return object;
 		}
-		
-		RBNode<T> deleteNode = this.search(object);
-		
-		if(deleteNode == null){
-			throw new NoSuchElementException();
-		}
-		
-		RBNode<T> hold;
-		
-		if(deleteNode.right != null && deleteNode.left != null){
-			hold = this.findPredecessor(deleteNode);
-			deleteNode.setValue(hold.getValue());
-			deleteNode = hold;
-		}
-		
-		if(deleteNode.right == null && deleteNode.left == null){
-			deleteHere(deleteNode, null);
-			size--;
-			return deleteNode.getValue();
-		}
-		
-		if(deleteNode.right != null){
-			hold = deleteNode.right;
-			deleteNode.right = null;
-		}else{
-			hold = deleteNode.left;
-			deleteNode.left = null;
-		}
-		
-		deleteHere(deleteNode, hold);
-		
-		if(this.root == deleteNode){
 
-		}
-		size--;
-		return deleteNode.getValue();
+		return null;
 	}
-	
-	private void deleteHere(RBNode<T> deleteNode, RBNode<T> attach){
-		RBNode<T> parent = deleteNode.parent;
 		
-		if(parent == null){
-			this.root = attach;
-			if(attach != null){
-				attach.setParent(null);
-			}
-			return;
-		}
-		
-		if(deleteNode == parent.left){
-			parent.setLeft(attach);
-			if(attach != null){
-				attach.setParent(parent);
-			}
-			deleteNode = null;
-			return;
-		}
-		parent.setRight(attach);
-		if(attach != null){
-			attach.setParent(parent);
-		}
-		deleteNode = null;
-		return;
-	}
-	
-	private RBNode<T> findPredecessor(RBNode<T> node){
-		if(node.left == null){
-			return null;
-		}
-		RBNode<T> pred = node.left;
-		while(pred.right != null){
-			pred = pred.right;
-		}
-		return pred;
-	}
-	
 	public LinkedList<T> inOrder(){
 		LinkedList<T> lst = new LinkedList<T>();
 		this._inOrder(this.root, lst);
@@ -286,7 +300,8 @@ public class RedBlackTree<T extends Comparable<T>>
 		RedBlackTree<T> newTree = new RedBlackTree<T>();
 		try {
 			if(this.root != null){
-				this._clone(this.root, newTree.root(this.root.getValue()));
+				newTree.root().setValue(this.root.getValue());
+				this._clone(this.root, newTree.root());
 				newTree.size = this.size;
 			}
 		} catch (Exception e) {

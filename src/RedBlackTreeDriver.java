@@ -19,14 +19,13 @@ public class RedBlackTreeDriver {
 			}catch(IllegalArgumentException err){
 				System.out.println(err.getMessage() + ": " + i);
 			}
-				binTree.printTree();
 		}
 		
 		binTree.printTree();
 		
 		for(int i : intArray){
 			if(RedBlackTree.search(binTree, i)){
-				binTree = RedBlackTree.delete(binTree, i);
+				binTree.delete( i);
 				System.out.println("Deleted: " + i);
 				System.out.println("Size: " + binTree.size);
 				binTree.printTree();
@@ -55,7 +54,6 @@ public class RedBlackTreeDriver {
 		System.out.print("Count Function for 10-35: ");
 		
 		System.out.println(RedBlackTree.count(binTree, 10, 35));
-
 	}
 
 }

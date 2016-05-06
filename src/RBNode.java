@@ -49,4 +49,21 @@ public class RBNode<T extends Comparable<T>> {
 	public int setColor(int newColor){
 		return red = newColor;
 	}
+	
+	public RBNode<T> go(int direction){
+		if(direction > 0){
+			return this.getRight();
+		}else{
+			return this.getLeft();
+		}		
+	}
+	
+	public RBNode<T> put(int direction, RBNode<T> nd){
+		if(direction > 0){
+			return this.setRight(nd);
+		}else{
+			return this.setLeft(nd);
+		}	
+	}
+	
 }
